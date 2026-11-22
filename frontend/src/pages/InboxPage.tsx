@@ -1,0 +1,17 @@
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react'
+import { FileText, UploadCloud } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { fetchInvoices, fetchVendors, uploadInvoice } from '../api/client'
+import type { Vendor } from '../types/catalog'
+import type { InvoiceSummary } from '../types/invoices'
+import { ErrorNotice, PageTitle } from '../components/Common'
+import { InvoiceTable } from './DashboardPage'
+
+export default function InboxPage() {
+  const [items,setItems] = useState<InvoiceSummary[]>([]), [vendors,setVendors] = useState<Vendor[]>([]), [search,setSearch] = useState(''), [status,setStatus] = useState(''), [vendor,setVendor] = useState(''), [sort,setSort] = useState('desc'), [error,setError] = useState(''), [uploading,setUploading] = useState(false), [selected,setSelected] = useState<{name:string;size:string}|null>(null)
+  const navigate = useNavigate()
+  const load = useCallback(() => { const q = new URLSearchParams(); if(search) q.set('search',search); if(status) q.set('status',status); if(vendor) q.set('vendor_id',vendor); q.set('sort',sort); fetchInvoices(q.toString()).then(setItems).catch(e => setError(e.message)) }, [search,status,vendor,sort])
+  useEffect(() => { fetchInvoices().then(setItems).catch(e => setError(e.message)); fetchVendors().then(setVendors).catch(e => setError(e.message)) }, [])
+  async function choose(e:ChangeEvent<HTMLInputElement>) { const file = e.target.files?.[0]; e.target.value=''; if(!file) return; if(file.type !== 'application/pdf'){ setError('Choose a PDF document.'); return } setSelected({name:file.name,size:`${(file.size/1024/1024).toFixed(2)} MB`}); setUploading(true); setError(''); try { const created=await uploadInvoice(file); navigate(`/invoices/${created.invoice_id}`) } catch(err) { setError(err instanceof Error ? err.message : 'Invoice processing could not be started.') } finally { setUploading(false) } }
+  return <main className="route-page"><PageTitle eyebrow="INVOICE INBOX" title="Incoming invoices" description="Upload, search, and review processed invoices." action={<label className="primary-action upload-action"><UploadCloud/>{uploading ? 'Uploading…' : 'Upload PDF'}<input aria-label="Upload invoice PDF" type="file" accept="application/pdf,.pdf" disabled={uploading} onChange={choose}/></label>}/><ErrorNotice message={error}/>{selected && <div className="upload-state"><FileText/><div><b>{selected.name}</b><span>{selected.size} · {uploading ? 'Document received; processing will continue on the invoice page.' : 'Upload complete'}</span></div></div>}<section className="panel"><div className="filterbar"><input aria-label="Search invoice number" placeholder="Search invoice number" value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label="Status" value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{['APPROVED','NEEDS_REVIEW','BLOCKED','PROCESSING_FAILED','PROCESSING'].map(x=><option key={x}>{x.replaceAll('_',' ')}</option>)}</select><select aria-label="Supplier" value={vendor} onChange={e=>setVendor(e.target.value)}><option value="">All suppliers</option>{vendors.map(v=><option value={v.id} key={v.id}>{v.display_name}</option>)}</select><select aria-label="Sort" value={sort} onChange={e=>setSort(e.target.value)}><option value="desc">Newest first</option><option value="asc">Oldest first</option></select><button onClick={load}>Apply filters</button></div><InvoiceTable invoices={items}/></section></main>
+}
