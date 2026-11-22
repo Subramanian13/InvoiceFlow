@@ -57,6 +57,32 @@ python -m scripts.generate_invoices
 
 The demo catalog contains 8 suppliers, 14 purchase orders, 7 shipment-evidence records, and 17 genuine PDF fixtures covering clean approval, handwritten and degraded scans, ambiguity, duplicates, inactive suppliers, arithmetic, currency, rate, quantity, capacity, detention, and unsupported-charge controls.
 
+## Application screenshots
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+*Figure 1: Accounts payable dashboard — real-time KPI summary (invoices processed, approved, needs review, approved value), recent invoice activity, open exceptions by category, and quick-access upload.*
+
+---
+
+![Invoice decision](docs/screenshots/invoice-decision.png)
+
+*Figure 2: Invoice decision view — INV-504 approved after all 14 deterministic controls pass; shows supplier/PO matching evidence, full validation results by category, extracted PDF fields, and processing history.*
+
+---
+
+![Review queue](docs/screenshots/review-queue.png)
+
+*Figure 3: Review queue — analyst exception workspace listing the 4 invoices that could not be automatically approved, each with exception type, supplier, amount, and issue summary.*
+
+---
+
+![Exception review](docs/screenshots/exception-review.png)
+
+*Figure 4: Exception detail — INV-505 blocked on detention allowance exceeded and PO financial capacity; shows the blocking rules with required vs. authorised amounts, recommended next steps, and full validation evidence chain.*
+
+---
+
 ## Product screens
 
 - `/` — persisted KPIs, recent invoices, open exceptions, and category counts.
